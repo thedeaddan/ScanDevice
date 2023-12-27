@@ -9,10 +9,9 @@ if sys.platform.startswith('linux'):
 else:
     from wmi import WMI
 
-from config import token, user_id
-
 print("Инициализация токена...")
 try:
+    from config import token, user_id
     bot = telebot.TeleBot(token=token)
 except Exception as e:
     print(f"Ошибка инициализации бота: {e}")
