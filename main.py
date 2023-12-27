@@ -60,10 +60,13 @@ processor_cores = str(cpu_count(logical=False))
 processor_threads = str(cpu_count(logical=True))
 svmem = virtual_memory()
 ram = get_size(svmem.total)
-
-gpu = getGPUs()[0]
+try:
+    gpu = getGPUs()[0]
+    graphics_card_mem = f"{gpu.memoryTotal} MB"
+except Exception as e:
+    print(e)
+    graphics_card_mem = "Не найдено.."
 graphics_card = gpu_info.Name
-graphics_card_mem = f"{gpu.memoryTotal} MB"
 
 os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
 os_version = f"{os_info.Version} {os_info.BuildNumber}"
