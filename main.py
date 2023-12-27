@@ -2,22 +2,21 @@ from wmi import WMI
 from peewee import SqliteDatabase, AutoField, CharField, Model
 from telebot import telebot
 from GPUtil import getGPUs
-from config import token,user_id
-from psutil import virtual_memory,cpu_count
+from config import token, user_id
+from psutil import virtual_memory, cpu_count
 from platform import uname
 
 print("Инициализация токена...")
 try:
     bot = telebot.TeleBot(token=token)
-except:
-    print("Не удалось иницилизировать бота, отправки сообщений не будет")
+except Exception as e:
+    print(f"Ошибка инициализации бота: {e}")
 
 print("Инициализация базы данных SQLite...")
 db = SqliteDatabase('computer_info.db')
 
 
 def get_size(bytes, suffix="B"):
-    print(f"Преобразование размера в удобочитаемый формат для {bytes}...")
     factor = 1024
     for unit in ["", "K", "M", "G", "T", "P"]:
         if bytes < factor:
@@ -46,83 +45,68 @@ print("Создание таблицы, если она еще не сущест
 db.connect()
 db.create_tables([ComputerInfo], safe=True)
 
-print("Инициализация WMI...")
-computer = WMI()
 print("Сбор информации о системе...")
+computer = WMI()
 computer_info = computer.Win32_ComputerSystem()[0]
 node_name = uname().node
-print(f"Имя компьютера: {node_name}\n")
+
 os_info = computer.Win32_OperatingSystem()[0]
 proc_info = computer.Win32_Processor()[0]
 gpu_info = computer.Win32_VideoController()[0]
 disk_info = computer.Win32_DiskDrive()
 
 processor_name = proc_info.Name
-print(f"Процессор: {processor_name}")
 processor_cores = str(cpu_count(logical=False))
-print(f"Количество ядер: {processor_cores}")
 processor_threads = str(cpu_count(logical=True))
-print(f"Количество потоков: {processor_threads}")
 svmem = virtual_memory()
-ram = f"{get_size(svmem.total)}"
-print(f"ОЗУ: {ram}")
+ram = get_size(svmem.total)
 
 gpu = getGPUs()[0]
 graphics_card = gpu_info.Name
-print(f"Видеокарта: {graphics_card}")
 graphics_card_mem = f"{gpu.memoryTotal} MB"
-print(f"Видеопамять: {graphics_card_mem}")
 
 os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
 os_version = f"{os_info.Version} {os_info.BuildNumber}"
-print(f"ОС: {os_name} {os_version}")
-hard_drives = [f"{get_size(float(disk.Size))}" for disk in disk_info]
-print(f"Жесткие диски: {', '.join(hard_drives)}")
 
-print("Сохранение информации в базе данных...")
+hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
+
 ComputerInfo.create(
-    node_name = node_name,
+    node_name=node_name,
     processor_name=processor_name,
     processor_cores=processor_cores,
     processor_threads=processor_threads,
     ram=ram,
     graphics_card=graphics_card,
-    graphics_card_mem = graphics_card_mem,
+    graphics_card_mem=graphics_card_mem,
     os_name=os_name,
     os_version=os_version,
     hard_drive=', '.join(hard_drives)
 )
 
+text = (f"\n\n===== ID компьютера: {ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id} =====\n"
+        f"Имя компьютера: {node_name}\n"
+        f"ОС: {os_name} {os_version}\n"
+        f"Процессор: {processor_name}\n"
+        f"Количество ядер: {processor_cores}\n"
+        f"Количество потоков: {processor_threads}\n"
+        f"ОЗУ: {ram}\n"
+        f"Видеокарта: {graphics_card}\n"
+        f"Видеопамять: {graphics_card_mem}\n"
+        f"Жесткие диски: {', '.join(hard_drives)}\n")
+
 print("Сохранение информации в текстовый файл...")
 with open('computer_info.txt', 'a', encoding='utf-8') as file:
-    file.write("\n\n===== ID компьютера: {} =====\n".format(ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id))
-    file.write(f"Имя компьютера: {node_name}\n")
-    file.write("ОС: " + os_name + " " + os_version + "\n")
-    file.write("Процессор: " + processor_name + "\n")
-    file.write("Количество ядер: " + processor_cores + "\n")
-    file.write("Количество потоков: " + processor_threads + "\n")
-    file.write("ОЗУ: " + ram + "\n")
-    file.write("Видеокарта: " + graphics_card + "\n")
-    file.write("Видеопамять: "+graphics_card_mem+"\n")
-    file.write("Жесткие диски: " + ', '.join(hard_drives) + "\n")
-
-text = ""
-text += ("\n\n===== ID компьютера: {} =====\n".format(ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id))
-text += (f"Имя компьютера: {node_name}\n")
-text += ("ОС: " + os_name + " " + os_version + "\n")
-text += ("Процессор: " + processor_name + "\n")
-text += ("Количество ядер: " + processor_cores + "\n")
-text += ("Количество потоков: " + processor_threads + "\n")
-text += ("ОЗУ: " + ram + "\n")
-text += ("Видеокарта: " + graphics_card + "\n")
-text += ("Видеопамять: "+graphics_card_mem+"\n")
-text += ("Жесткие диски: " + ', '.join(hard_drives) + "\n")
+    file.write(text)
 
 print("Отправка сообщения через Telegram...")
 if bot:
-    bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
-    bot.send_message(user_id, text)
+    try:
+        bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
+        bot.send_message(user_id, text)
+    except Exception as e:
+        print(f"Ошибка отправки сообщения в Telegram: {e}")
 else:
-    print("Бот не иницилизирован, отправка отменена")
+    print("Бот не инициализирован, отправка отменена")
+
 print("Процесс завершен.")
 input("Нажмите для выхода")
