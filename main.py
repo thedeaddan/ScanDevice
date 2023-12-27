@@ -1,10 +1,9 @@
 from wmi import WMI
 from peewee import SqliteDatabase, AutoField, CharField, Model
 from telebot import telebot
-from GPUtil import getGPUs
 from config import token, user_id
 from psutil import virtual_memory, cpu_count
-from platform import uname
+
 
 print("Инициализация токена...")
 try:
@@ -23,6 +22,8 @@ def get_size(bytes, suffix="B"):
             return f"{bytes:.2f}{unit}{suffix}"
         bytes /= factor
 
+def bytes_to_gb(bytes_value):
+    return round(bytes_value / (1024 ** 3))
 
 class ComputerInfo(Model):
     computer_id = AutoField()
@@ -48,24 +49,18 @@ db.create_tables([ComputerInfo], safe=True)
 print("Сбор информации о системе...")
 computer = WMI()
 computer_info = computer.Win32_ComputerSystem()[0]
-node_name = uname().node
-
 os_info = computer.Win32_OperatingSystem()[0]
 proc_info = computer.Win32_Processor()[0]
 gpu_info = computer.Win32_VideoController()[0]
 disk_info = computer.Win32_DiskDrive()
 
 processor_name = proc_info.Name
+node_name = os_info.CSName
 processor_cores = str(cpu_count(logical=False))
 processor_threads = str(cpu_count(logical=True))
 svmem = virtual_memory()
 ram = get_size(svmem.total)
-try:
-    gpu = getGPUs()[0]
-    graphics_card_mem = f"{gpu.memoryTotal} MB"
-except Exception as e:
-    print(e)
-    graphics_card_mem = "Не найдено.."
+graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
 graphics_card = gpu_info.Name
 
 os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
@@ -94,7 +89,7 @@ text = (f"\n\n===== ID компьютера: {ComputerInfo.select().order_by(Com
         f"Количество потоков: {processor_threads}\n"
         f"ОЗУ: {ram}\n"
         f"Видеокарта: {graphics_card}\n"
-        f"Видеопамять: {graphics_card_mem}\n"
+        f"Видеопамять: {graphics_card_mem}GB\n"
         f"Жесткие диски: {', '.join(hard_drives)}\n")
 
 print("Сохранение информации в текстовый файл...")
