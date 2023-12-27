@@ -46,4 +46,4 @@
 
 ## Лицензия
 
-MIT
+(MIT)[https://github.com/thedeaddan/ScanDevice/blob/main/LICENSE]
