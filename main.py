@@ -88,11 +88,9 @@ else:
     ram = get_size(svmem.total)
     graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
     graphics_card = gpu_info.Name
-
-os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
-os_version = f"{os_info.Version} {os_info.BuildNumber}"
-
-hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
+    os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
+    os_version = f"{os_info.Version} {os_info.BuildNumber}"
+    hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
 
 ComputerInfo.create(
     node_name=node_name,
