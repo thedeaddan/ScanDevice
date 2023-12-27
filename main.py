@@ -66,6 +66,7 @@ if sys.platform.startswith('linux'):
     processor_cores = str(cpu_count(logical=False))
     processor_threads = str(cpu_count(logical=True))
     svmem = virtual_memory()
+    graphics_card = ""
     ram = get_size(svmem.total)
     disk = disk_partitions()[0].mountpoint
     hard_drives = [f"{get_size(disk_usage(disk).total)} ({disk})"]
