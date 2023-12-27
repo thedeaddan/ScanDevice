@@ -1,4 +1,5 @@
-('C:\\Users\\thede\\OneDrive\\Рабочий стол\\scanhard\\build\\main\\PYZ-00.pyz',
+('C:\\Users\\thede\\OneDrive\\Рабочий '
+ 'стол\\ScanDevice\\build\\main\\PYZ-00.pyz',
  [('GPUtil',
    'C:\\Users\\thede\\AppData\\Local\\Programs\\Python\\Python39\\lib\\site-packages\\GPUtil\\__init__.py',
    'PYMODULE'),
@@ -493,6 +494,9 @@
    'PYMODULE'),
   ('concurrent.futures.thread',
    'C:\\Users\\thede\\AppData\\Local\\Programs\\Python\\Python39\\lib\\concurrent\\futures\\thread.py',
+   'PYMODULE'),
+  ('config',
+   'C:\\Users\\thede\\OneDrive\\Рабочий стол\\ScanDevice\\config.py',
    'PYMODULE'),
   ('configparser',
    'C:\\Users\\thede\\AppData\\Local\\Programs\\Python\\Python39\\lib\\configparser.py',
