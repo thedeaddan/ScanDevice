@@ -56,7 +56,13 @@ if sys.platform.startswith('linux'):
     node_name = 'Linux Machine'  # Примерное имя узла
     os_name = 'Linux'
     os_version = sys.platform
-    processor_name = ' '.join([part for part in open('/proc/cpuinfo').readlines() if 'model name' in part][0].split(':')[1].strip().split())
+    with open('/proc/cpuinfo', 'r') as f:
+        for line in f.readlines():
+            if 'model name' in line:
+                processor_name = line.split(':')[1].strip()
+                break
+        else:
+            processor_name = 'Unknown Processor'
     processor_cores = str(cpu_count(logical=False))
     processor_threads = str(cpu_count(logical=True))
     svmem = virtual_memory()
