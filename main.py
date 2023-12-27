@@ -1,10 +1,10 @@
 from wmi import WMI
 from peewee import SqliteDatabase, AutoField, CharField, Model
 from telebot import telebot
-import GPUtil
+from GPUtil import getGPUs
 from config import token,user_id
-import psutil
-import platform
+from psutil import virtual_memory,cpu_count
+from platform import uname
 
 print("Инициализация токена...")
 try:
@@ -50,7 +50,7 @@ print("Инициализация WMI...")
 computer = WMI()
 print("Сбор информации о системе...")
 computer_info = computer.Win32_ComputerSystem()[0]
-node_name = platform.uname().node
+node_name = uname().node
 print(f"Имя компьютера: {node_name}\n")
 os_info = computer.Win32_OperatingSystem()[0]
 proc_info = computer.Win32_Processor()[0]
@@ -59,15 +59,15 @@ disk_info = computer.Win32_DiskDrive()
 
 processor_name = proc_info.Name
 print(f"Процессор: {processor_name}")
-processor_cores = str(psutil.cpu_count(logical=False))
+processor_cores = str(cpu_count(logical=False))
 print(f"Количество ядер: {processor_cores}")
-processor_threads = str(psutil.cpu_count(logical=True))
+processor_threads = str(cpu_count(logical=True))
 print(f"Количество потоков: {processor_threads}")
-svmem = psutil.virtual_memory()
+svmem = virtual_memory()
 ram = f"{get_size(svmem.total)}"
 print(f"ОЗУ: {ram}")
 
-gpu = GPUtil.getGPUs()[0]
+gpu = getGPUs()[0]
 graphics_card = gpu_info.Name
 print(f"Видеокарта: {graphics_card}")
 graphics_card_mem = f"{gpu.memoryTotal} MB"
