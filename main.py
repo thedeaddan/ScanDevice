@@ -80,14 +80,14 @@ else:
     proc_info = computer.Win32_Processor()[0]
     gpu_info = computer.Win32_VideoController()[0]
     disk_info = computer.Win32_DiskDrive()
-
-node_name = os_info.CSName
-processor_cores = str(cpu_count(logical=False))
-processor_threads = str(cpu_count(logical=True))
-svmem = virtual_memory()
-ram = get_size(svmem.total)
-graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
-graphics_card = gpu_info.Name
+    processor_name = proc_info.Name
+    node_name = os_info.CSName
+    processor_cores = str(cpu_count(logical=False))
+    processor_threads = str(cpu_count(logical=True))
+    svmem = virtual_memory()
+    ram = get_size(svmem.total)
+    graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
+    graphics_card = gpu_info.Name
 
 os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
 os_version = f"{os_info.Version} {os_info.BuildNumber}"
