@@ -81,7 +81,6 @@ else:
     gpu_info = computer.Win32_VideoController()[0]
     disk_info = computer.Win32_DiskDrive()
 
-processor_name = proc_info.Name
 node_name = os_info.CSName
 processor_cores = str(cpu_count(logical=False))
 processor_threads = str(cpu_count(logical=True))
