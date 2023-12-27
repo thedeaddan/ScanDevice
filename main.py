@@ -1,9 +1,15 @@
-from wmi import WMI
+import sys
 from peewee import SqliteDatabase, AutoField, CharField, Model
 from telebot import telebot
-from config import token, user_id
-from psutil import virtual_memory, cpu_count
+from psutil import virtual_memory, cpu_count, disk_partitions, disk_usage
 
+# Проверка операционной системы
+if sys.platform.startswith('linux'):
+    from psutil import cpu_freq
+else:
+    from wmi import WMI
+
+from config import token, user_id
 
 print("Инициализация токена...")
 try:
@@ -47,12 +53,28 @@ db.connect()
 db.create_tables([ComputerInfo], safe=True)
 
 print("Сбор информации о системе...")
-computer = WMI()
-computer_info = computer.Win32_ComputerSystem()[0]
-os_info = computer.Win32_OperatingSystem()[0]
-proc_info = computer.Win32_Processor()[0]
-gpu_info = computer.Win32_VideoController()[0]
-disk_info = computer.Win32_DiskDrive()
+if sys.platform.startswith('linux'):
+    node_name = 'Linux Machine'  # Примерное имя узла
+    os_name = 'Linux'
+    os_version = sys.platform
+    processor_name = ' '.join([part for part in open('/proc/cpuinfo').readlines() if 'model name' in part][0].split(':')[1].strip().split())
+    processor_cores = str(cpu_count(logical=False))
+    processor_threads = str(cpu_count(logical=True))
+    svmem = virtual_memory()
+    ram = get_size(svmem.total)
+    disk = disk_partitions()[0].mountpoint
+    hard_drives = [f"{get_size(disk_usage(disk).total)} ({disk})"]
+
+    # Дополнительная информация для Linux
+    #os_version = ' '.join([part for part in open('/etc/os-release').readlines() if part.startswith('PRETTY_NAME')][0].split('=')[1].strip('"')])
+
+else:
+    computer = WMI()
+    computer_info = computer.Win32_ComputerSystem()[0]
+    os_info = computer.Win32_OperatingSystem()[0]
+    proc_info = computer.Win32_Processor()[0]
+    gpu_info = computer.Win32_VideoController()[0]
+    disk_info = computer.Win32_DiskDrive()
 
 processor_name = proc_info.Name
 node_name = os_info.CSName
