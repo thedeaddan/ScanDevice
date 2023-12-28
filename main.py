@@ -45,8 +45,9 @@ db.create_tables([ComputerInfo], safe=True)
 print("Сбор информации о системе...")
 if system() == "Linux":
     import GPUtil
+    import cpuinfo
     uname = uname()
-    processor_name = uname.processor
+    processor_name = cpuinfo.get_cpu_info()['brand_raw']
     node_name = uname.node
     processor_cores = cpu_count(logical=False)
     processor_threads = cpu_count(logical=True)
