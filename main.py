@@ -46,8 +46,7 @@ print("Сбор информации о системе...")
 if system() == "Linux":
     import GPUtil
     uname = uname()
-    processor_name = uname.machine
-    print(processor_name)
+    processor_name = uname.processor
     node_name = uname.node
     processor_cores = cpu_count(logical=False)
     processor_threads = cpu_count(logical=True)
