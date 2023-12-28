@@ -1,5 +1,5 @@
 from peewee import SqliteDatabase, AutoField, CharField, Model
-from psutil import virtual_memory, cpu_count, cpu_freq
+from psutil import virtual_memory, cpu_count,disk_partitions,disk_usage
 from telebot import telebot
 from platform import system,uname,processor,machine
 print("Инициализация токена...")
@@ -45,18 +45,31 @@ db.create_tables([ComputerInfo], safe=True)
 print("Сбор информации о системе...")
 if system() == "Linux":
     import GPUtil
-    gpu = GPUtil.getGPUs()[0]
     uname = uname()
-    processor_name = uname.processor
+    processor_name = uname.machine
+    print(processor_name)
     node_name = uname.node
     processor_cores = cpu_count(logical=False)
     processor_threads = cpu_count(logical=True)
     svmem = virtual_memory()
     ram = get_size(svmem.total)
-    graphics_card_mem = f"{gpu.memoryTotal}MB"
-    graphics_card = gpu.name
+    try:
+        gpu = GPUtil.getGPUs()[0]
+        graphics_card_mem = f"{gpu.memoryTotal}MB"
+        graphics_card = gpu.name
+    except:
+        graphics_card_mem = "---"
+        graphics_card = "---"
     os_name = uname.system
     os_version = uname.version
+    partitions = disk_partitions()
+    hard_drives = []
+    for part in partitions:
+        partition_usage = disk_usage(part.mountpoint)
+        size = get_size(partition_usage.total)
+        if size != 0:
+            hard_drives.append(size)
+
 else:
     from wmi import WMI
     computer = WMI()
@@ -74,10 +87,8 @@ else:
     ram = get_size(svmem.total)
     graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
     graphics_card = gpu_info.Name
-
     os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
     os_version = f"{os_info.Version} {os_info.BuildNumber}"
-
     hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
 
 ComputerInfo.create(
@@ -109,14 +120,11 @@ with open('computer_info.txt', 'a', encoding='utf-8') as file:
     file.write(text)
 
 print("Отправка сообщения через Telegram...")
-if bot:
-    try:
-        bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
-        bot.send_message(user_id, text)
-    except Exception as e:
-        print(f"Ошибка отправки сообщения в Telegram: {e}")
-else:
-    print("Бот не инициализирован, отправка отменена")
+try:
+    bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
+    bot.send_message(user_id, text)
+except Exception as e:
+    print(f"Ошибка отправки сообщения в Telegram: {e}")
 
 print("Процесс завершен.")
 input("Нажмите для выхода")
