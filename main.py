@@ -65,68 +65,64 @@ if system() == "Linux":
     os_name = uname.system
     os_version = uname.version
     partitions = disk_partitions()
-    hard_drives = []
-    for part in partitions:
-        partition_usage = disk_usage(part.mountpoint)
-        size = get_size(partition_usage.total)
-        if size != 0:
-            hard_drives.append(size)
+    hard_drives = subprocess.check_output(["lsblk"]).decode("utf-8")
+    print(hard_drives)
 
-else:
-    from wmi import WMI
-    computer = WMI()
-    computer_info = computer.Win32_ComputerSystem()[0]
-    os_info = computer.Win32_OperatingSystem()[0]
-    proc_info = computer.Win32_Processor()[0]
-    gpu_info = computer.Win32_VideoController()[0]
-    disk_info = computer.Win32_DiskDrive()
+# else:
+#     from wmi import WMI
+#     computer = WMI()
+#     computer_info = computer.Win32_ComputerSystem()[0]
+#     os_info = computer.Win32_OperatingSystem()[0]
+#     proc_info = computer.Win32_Processor()[0]
+#     gpu_info = computer.Win32_VideoController()[0]
+#     disk_info = computer.Win32_DiskDrive()
 
-    processor_name = proc_info.Name
-    node_name = os_info.CSName
-    processor_cores = str(cpu_count(logical=False))
-    processor_threads = str(cpu_count(logical=True))
-    svmem = virtual_memory()
-    ram = get_size(svmem.total)
-    graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
-    graphics_card = gpu_info.Name
-    os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
-    os_version = f"{os_info.Version} {os_info.BuildNumber}"
-    hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
+#     processor_name = proc_info.Name
+#     node_name = os_info.CSName
+#     processor_cores = str(cpu_count(logical=False))
+#     processor_threads = str(cpu_count(logical=True))
+#     svmem = virtual_memory()
+#     ram = get_size(svmem.total)
+#     graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
+#     graphics_card = gpu_info.Name
+#     os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
+#     os_version = f"{os_info.Version} {os_info.BuildNumber}"
+#     hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
 
-ComputerInfo.create(
-    node_name=node_name,
-    processor_name=processor_name,
-    processor_cores=processor_cores,
-    processor_threads=processor_threads,
-    ram=ram,
-    graphics_card=graphics_card,
-    graphics_card_mem=graphics_card_mem,
-    os_name=os_name,
-    os_version=os_version,
-    hard_drive=', '.join(hard_drives)
-)
+# ComputerInfo.create(
+#     node_name=node_name,
+#     processor_name=processor_name,
+#     processor_cores=processor_cores,
+#     processor_threads=processor_threads,
+#     ram=ram,
+#     graphics_card=graphics_card,
+#     graphics_card_mem=graphics_card_mem,
+#     os_name=os_name,
+#     os_version=os_version,
+#     hard_drive=', '.join(hard_drives)
+# )
 
-text = (f"\n\n===== ID компьютера: {ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id} =====\n"
-        f"Имя компьютера: {node_name}\n"
-        f"ОС: {os_name} {os_version}\n"
-        f"Процессор: {processor_name}\n"
-        f"Количество ядер: {processor_cores}\n"
-        f"Количество потоков: {processor_threads}\n"
-        f"ОЗУ: {ram}\n"
-        f"Видеокарта: {graphics_card}\n"
-        f"Видеопамять: {graphics_card_mem}GB\n"
-        f"Жесткие диски: {', '.join(hard_drives)}\n")
+# text = (f"\n\n===== ID компьютера: {ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id} =====\n"
+#         f"Имя компьютера: {node_name}\n"
+#         f"ОС: {os_name} {os_version}\n"
+#         f"Процессор: {processor_name}\n"
+#         f"Количество ядер: {processor_cores}\n"
+#         f"Количество потоков: {processor_threads}\n"
+#         f"ОЗУ: {ram}\n"
+#         f"Видеокарта: {graphics_card}\n"
+#         f"Видеопамять: {graphics_card_mem}GB\n"
+#         f"Жесткие диски: {', '.join(hard_drives)}\n")
 
-print("Сохранение информации в текстовый файл...")
-with open('computer_info.txt', 'a', encoding='utf-8') as file:
-    file.write(text)
+# print("Сохранение информации в текстовый файл...")
+# with open('computer_info.txt', 'a', encoding='utf-8') as file:
+#     file.write(text)
 
-print("Отправка сообщения через Telegram...")
-try:
-    bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
-    bot.send_message(user_id, text)
-except Exception as e:
-    print(f"Ошибка отправки сообщения в Telegram: {e}")
+# print("Отправка сообщения через Telegram...")
+# try:
+#     bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
+#     bot.send_message(user_id, text)
+# except Exception as e:
+#     print(f"Ошибка отправки сообщения в Telegram: {e}")
 
-print("Процесс завершен.")
-input("Нажмите для выхода")
+# print("Процесс завершен.")
+# input("Нажмите для выхода")
