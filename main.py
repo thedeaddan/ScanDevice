@@ -58,7 +58,6 @@ if system() == "Linux":
         gpu = [line for line in gpu.split("\n") if "VGA" in line or "3D" in line]
         graphics_card_mem = "----"
         graphics_card = gpu[0].split(":")[2]
-        print(graphics_card)
     except Exception as e:
         print(e)
         graphics_card_mem = "---"
