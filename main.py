@@ -65,7 +65,10 @@ if system() == "Linux":
     os_name = uname.system
     os_version = uname.version
     partitions = disk_partitions()
-    hard_drives = subprocess.check_output(["lsblk"]).decode("utf-8")
+    hard_drives = subprocess.check_output(["lsblk"]).decode("utf-8").split("\n")
+    for drive in hard_drives:
+        if "disk" in drive:
+            print(drive)
     print(hard_drives)
 
 # else:
