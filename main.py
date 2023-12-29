@@ -46,6 +46,7 @@ print("Сбор информации о системе...")
 if system() == "Linux":
     import cpuinfo
     import subprocess
+    from re import search
     uname = uname()
     processor_name = cpuinfo.get_cpu_info()['brand_raw']
     node_name = uname.node
@@ -65,11 +66,15 @@ if system() == "Linux":
     os_name = uname.system
     os_version = uname.version
     partitions = disk_partitions()
-    hard_drives = subprocess.check_output(["lsblk"]).decode("utf-8").split("\n")
-    for drive in hard_drives:
+    hard_drives = []
+    drives = subprocess.check_output(["lsblk"]).decode("utf-8").split("\n")
+    for drive in drives:
         if "disk" in drive:
-            print(drive)
-    print(hard_drives)
+            pattern = r"(\d+,\d+G)"
+            match = search(pattern, drive).group(1)
+            print(match)
+            
+            
 
 # else:
 #     from wmi import WMI
