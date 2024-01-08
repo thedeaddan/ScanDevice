@@ -18,7 +18,7 @@
 1. **Установите необходимые библиотеки**:
 
     ```bash
-    pip install wmi peewee telebot GPUtil psutil
+    pip install wmi peewee pytelegrambotapi GPUtil psutil
     ```
 
 2. **Создайте файл `config.py`** и добавьте следующие строки:
