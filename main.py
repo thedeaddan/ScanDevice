@@ -1,7 +1,8 @@
 from peewee import SqliteDatabase, AutoField, CharField, Model
 from psutil import virtual_memory, cpu_count,disk_partitions,disk_usage
 from telebot import telebot
-from platform import system,uname,processor,machine
+from platform import system,uname
+from time import sleep
 print("Инициализация токена...")
 try:
     from config import token, user_id
@@ -24,6 +25,7 @@ class ComputerInfo(Model):
     os_name = CharField()
     os_version = CharField()
     hard_drive = CharField()
+    sended = CharField()
 
     class Meta:
         database = db
@@ -105,8 +107,8 @@ ComputerInfo.create(
     os_version=os_version,
     hard_drive=', '.join(hard_drives)
 )
-
-text = (f"\n\n===== ID компьютера: {ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id} =====\n"
+comp_id = ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id
+text = (f"\n\n===== ID компьютера: {comp_id} =====\n"
         f"Имя компьютера: {node_name}\n"
         f"ОС: {os_name} {os_version}\n"
         f"Процессор: {processor_name}\n"
@@ -121,10 +123,15 @@ print("Сохранение информации в текстовый файл.
 with open('computer_info.txt', 'a', encoding='utf-8') as file:
     file.write(text)
 
+#Немного ждем, чтоб иницилизировался Ethernet адаптер
+sleep(10)
 print("Отправка сообщения через Telegram...")
 try:
     bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
     bot.send_message(user_id, text)
+    comp = ComputerInfo.get(ComputerInfo.computer_id == comp_id).sended = True
+    comp.save()
+
 except Exception as e:
     print(f"Ошибка отправки сообщения в Telegram: {e}")
 
