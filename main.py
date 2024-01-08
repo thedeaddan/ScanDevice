@@ -111,7 +111,10 @@ else:
     processor_threads = str(cpu_count(logical=True))
     svmem = virtual_memory()
     ram = get_size(svmem.total)
-    graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
+    try:
+        graphics_card_mem = bytes_to_gb(int(str(gpu_info).split("AdapterRAM")[1].split(";")[0].split(" ")[2]))
+    except:
+        graphics_card_mem = "---"
     graphics_card = gpu_info.Name
     os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
     os_version = f"{os_info.Version} {os_info.BuildNumber}"
