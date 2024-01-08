@@ -44,6 +44,28 @@ print("Создание таблицы, если она еще не сущест
 db.connect()
 db.create_tables([ComputerInfo], safe=True)
 
+try:
+    unsended_comps = ComputerInfo.select().where(ComputerInfo.sended != True)
+    for comp in unsended_comps:
+        text = (f"\n\n===== ID компьютера: {comp.computer_id} =====\n"
+                f"Имя компьютера: {comp.node_name}\n"
+                f"ОС: {comp.os_name} {comp.os_version}\n"
+                f"Процессор: {comp.processor_name}\n"
+                f"Количество ядер: {comp.processor_cores}\n"
+                f"Количество потоков: {comp.processor_threads}\n"
+                f"ОЗУ: {comp.ram}\n"
+                f"Видеокарта: {comp.graphics_card}\n"
+                f"Видеопамять: {comp.graphics_card_mem}GB\n"
+                f"Жесткие диски: {comp.hard_drive}")
+        bot.send_message(user_id, "*Отсканированный компьютер с ошибкой отправки*", parse_mode="Markdown")
+        bot.send_message(user_id, text)
+        comp.sended = True
+        comp.save()
+except Exception as e:
+    print(e)
+    pass
+
+
 print("Сбор информации о системе...")
 if system() == "Linux":
     import cpuinfo
@@ -94,6 +116,7 @@ else:
     os_name = os_info.Name.encode('utf-8').split(b'|')[0].decode('utf-8')
     os_version = f"{os_info.Version} {os_info.BuildNumber}"
     hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
+    
 
 def find_similar_computer(node_name, processor_name, processor_cores, processor_threads, ram, graphics_card, graphics_card_mem, os_name, os_version, hard_drives):
     try:
