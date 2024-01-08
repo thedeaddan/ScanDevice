@@ -129,7 +129,8 @@ else:
         graphics_card_mem=graphics_card_mem,
         os_name=os_name,
         os_version=os_version,
-        hard_drive=', '.join(hard_drives)
+        hard_drive=', '.join(hard_drives),
+        sended = ""
     )
     comp_id = ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id
     text = (f"\n\n===== ID компьютера: {comp_id} =====\n"
@@ -153,7 +154,8 @@ else:
     try:
         bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
         bot.send_message(user_id, text)
-        comp = ComputerInfo.get(ComputerInfo.computer_id == comp_id).sended = True
+        comp = ComputerInfo.get(ComputerInfo.computer_id == comp_id)
+        comp.sended = True
         comp.save()
 
     except Exception as e:
