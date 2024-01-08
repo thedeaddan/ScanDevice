@@ -95,45 +95,69 @@ else:
     os_version = f"{os_info.Version} {os_info.BuildNumber}"
     hard_drives = [get_size(float(disk.Size)) for disk in disk_info]
 
-ComputerInfo.create(
-    node_name=node_name,
-    processor_name=processor_name,
-    processor_cores=processor_cores,
-    processor_threads=processor_threads,
-    ram=ram,
-    graphics_card=graphics_card,
-    graphics_card_mem=graphics_card_mem,
-    os_name=os_name,
-    os_version=os_version,
-    hard_drive=', '.join(hard_drives)
+def find_similar_computer(node_name, processor_name, processor_cores, processor_threads, ram, graphics_card, graphics_card_mem, os_name, os_version, hard_drives):
+    try:
+        return ComputerInfo.get(
+            ComputerInfo.node_name == node_name,
+            ComputerInfo.processor_name == processor_name,
+            ComputerInfo.processor_cores == processor_cores,
+            ComputerInfo.processor_threads == processor_threads,
+            ComputerInfo.ram == ram,
+            ComputerInfo.graphics_card == graphics_card,
+            ComputerInfo.graphics_card_mem == graphics_card_mem,
+            ComputerInfo.os_name == os_name,
+            ComputerInfo.os_version == os_version,
+            ComputerInfo.hard_drive == hard_drives
+        )
+    except ComputerInfo.DoesNotExist:
+        return None
+
+existing_computer = find_similar_computer(
+    node_name, processor_name, processor_cores, processor_threads, ram, graphics_card, graphics_card_mem, os_name, os_version, ', '.join(hard_drives)
 )
-comp_id = ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id
-text = (f"\n\n===== ID компьютера: {comp_id} =====\n"
-        f"Имя компьютера: {node_name}\n"
-        f"ОС: {os_name} {os_version}\n"
-        f"Процессор: {processor_name}\n"
-        f"Количество ядер: {processor_cores}\n"
-        f"Количество потоков: {processor_threads}\n"
-        f"ОЗУ: {ram}\n"
-        f"Видеокарта: {graphics_card}\n"
-        f"Видеопамять: {graphics_card_mem}GB\n"
-        f"Жесткие диски: {', '.join(hard_drives)}\n")
 
-print("Сохранение информации в текстовый файл...")
-with open('computer_info.txt', 'a', encoding='utf-8') as file:
-    file.write(text)
+if existing_computer:
+    print("Аналогичный компьютер уже существует в базе данных. Не сохраняем новую запись.")
+else:
+    ComputerInfo.create(
+        node_name=node_name,
+        processor_name=processor_name,
+        processor_cores=processor_cores,
+        processor_threads=processor_threads,
+        ram=ram,
+        graphics_card=graphics_card,
+        graphics_card_mem=graphics_card_mem,
+        os_name=os_name,
+        os_version=os_version,
+        hard_drive=', '.join(hard_drives)
+    )
+    comp_id = ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id
+    text = (f"\n\n===== ID компьютера: {comp_id} =====\n"
+            f"Имя компьютера: {node_name}\n"
+            f"ОС: {os_name} {os_version}\n"
+            f"Процессор: {processor_name}\n"
+            f"Количество ядер: {processor_cores}\n"
+            f"Количество потоков: {processor_threads}\n"
+            f"ОЗУ: {ram}\n"
+            f"Видеокарта: {graphics_card}\n"
+            f"Видеопамять: {graphics_card_mem}GB\n"
+            f"Жесткие диски: {', '.join(hard_drives)}\n")
 
-#Немного ждем, чтоб иницилизировался Ethernet адаптер
-sleep(10)
-print("Отправка сообщения через Telegram...")
-try:
-    bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
-    bot.send_message(user_id, text)
-    comp = ComputerInfo.get(ComputerInfo.computer_id == comp_id).sended = True
-    comp.save()
+    print("Сохранение информации в текстовый файл...")
+    with open('computer_info.txt', 'a', encoding='utf-8') as file:
+        file.write(text)
 
-except Exception as e:
-    print(f"Ошибка отправки сообщения в Telegram: {e}")
+    #Немного ждем, чтоб иницилизировался Ethernet адаптер
+    sleep(10)
+    print("Отправка сообщения через Telegram...")
+    try:
+        bot.send_message(user_id, "*Был просканирован новый компьютер!*", parse_mode="Markdown")
+        bot.send_message(user_id, text)
+        comp = ComputerInfo.get(ComputerInfo.computer_id == comp_id).sended = True
+        comp.save()
+
+    except Exception as e:
+        print(f"Ошибка отправки сообщения в Telegram: {e}")
 
 print("Процесс завершен.")
 input("Нажмите для выхода")
