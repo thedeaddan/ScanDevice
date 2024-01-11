@@ -174,7 +174,7 @@ existing_computer = find_similar_computer(
 if existing_computer:
     print("Аналогичный компьютер уже существует в базе данных. Не сохраняем новую запись.")
 else:
-    processor_price = CPUs.get(CPUs.name == processor_name.replace("(R)","").replace("(TM)","").split("CPU")[0].strip()).price
+    processor_price = CPUs.get(CPUs.name == processor_name.replace("(R)","").replace("(TM)","").split("CPU")[0].split("with")[0].strip()).price
     graphics_card_price = VideoCards.get(VideoCards.name == graphics_card).price
     price = processor_price+graphics_card_price
     ComputerInfo.create(
