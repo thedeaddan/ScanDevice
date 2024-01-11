@@ -6,7 +6,7 @@ from peewee import AutoField, CharField, Model, IntegerField, SqliteDatabase
 
 url = "https://technical.city/en/video/best-price-to-performance"
 
-db = SqliteDatabase('computer_info.db')
+db = SqliteDatabase('databases/accessories.db')
 
 class VideoCards(Model):
     rating_position = IntegerField(unique=True)  # Устанавливаем уникальность для поля rating_position
@@ -48,7 +48,7 @@ while True:
         try:
             power_consumption = int(power_consumption.replace(".",","))
         except:
-            power_consumption = None
+            power_consumption = 0
         # Проверяем, есть ли уже запись с таким rating_position
         existing_record = VideoCards.select().where(VideoCards.rating_position == rating_position).first()
 
