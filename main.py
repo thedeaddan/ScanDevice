@@ -1,4 +1,4 @@
-from peewee import SqliteDatabase, AutoField, CharField, Model, IntegerField
+from peewee import SqliteDatabase, AutoField, CharField, Model, IntegerField,FloatField
 from psutil import virtual_memory, cpu_count,disk_partitions
 from telebot import telebot
 from platform import system,uname
@@ -12,16 +12,40 @@ except Exception as e:
 
 print("Инициализация базы данных SQLite...")
 db = SqliteDatabase('computer_info.db')
-hards = SqliteDatabase('database/accessories.db')
+hards = SqliteDatabase('databases/accessories.db')
+
+class CPUs(Model):
+    rating_position = IntegerField(unique=True)
+    name = CharField()
+    socket = CharField()
+    cores_threads = CharField()
+    base_frequency = FloatField()
+    max_memory = CharField()
+    price = IntegerField()
+    TDP = IntegerField()
+
+    class Meta:
+        database = hards
+
+class VideoCards(Model):
+    rating_position = IntegerField(unique=True) 
+    name = CharField()
+    price = IntegerField()
+    TDP = IntegerField()
+
+    class Meta:
+        database = hards
 
 class ComputerInfo(Model):
     computer_id = AutoField()
     node_name = CharField()
     processor_name = CharField()
+    processor_price = IntegerField()
     processor_cores = CharField()
     processor_threads = CharField()
     ram = CharField()
     graphics_card = CharField()
+    graphics_card_price = IntegerField()
     graphics_card_mem = CharField()
     os_name = CharField()
     os_version = CharField()
@@ -50,15 +74,18 @@ try:
     unsended_comps = ComputerInfo.select().where(ComputerInfo.sended != True)
     for comp in unsended_comps:
         text = (f"\n\n===== ID компьютера: {comp.computer_id} =====\n"
-                f"Имя компьютера: {comp.node_name}\n"
-                f"ОС: {comp.os_name} {comp.os_version}\n"
-                f"Процессор: {comp.processor_name}\n"
-                f"Количество ядер: {comp.processor_cores}\n"
-                f"Количество потоков: {comp.processor_threads}\n"
-                f"ОЗУ: {comp.ram}\n"
-                f"Видеокарта: {comp.graphics_card}\n"
-                f"Видеопамять: {comp.graphics_card_mem}GB\n"
-                f"Жесткие диски: {comp.hard_drive}")
+            f"Имя компьютера: {comp.node_name}\n"
+            f"ОС: {comp.os_name} {comp.os_version}\n"
+            f"Процессор: {comp.processor_name}\n"
+            f"Стоимость процессора: {comp.processor_price} USD\n"
+            f"Количество ядер: {comp.processor_cores}\n"
+            f"Количество потоков: {comp.processor_threads}\n"
+            f"ОЗУ: {comp.ram}\n"
+            f"Видеокарта: {comp.graphics_card}\n"
+            f"Стоимость видеокарты: {comp.graphics_card_price} USD\n"
+            f"Видеопамять: {comp.graphics_card_mem}GB\n"
+            f"Жесткие диски: {comp.hard_drive}\n"
+            f"Стоимость общая: {comp.price} USD\n")
         bot.send_message(user_id, "*Отсканированный компьютер с ошибкой отправки*", parse_mode="Markdown")
         bot.send_message(user_id, text)
         comp.sended = True
@@ -147,20 +174,23 @@ existing_computer = find_similar_computer(
 if existing_computer:
     print("Аналогичный компьютер уже существует в базе данных. Не сохраняем новую запись.")
 else:
-    price = 0
-
+    processor_price = CPUs.get(CPUs.name == processor_name.replace("(R)","").replace("(TM)","").split("CPU")[0].strip()).price
+    graphics_card_price = VideoCards.get(VideoCards.name == graphics_card).price
+    price = processor_price+graphics_card_price
     ComputerInfo.create(
         node_name=node_name,
         processor_name=processor_name,
+        processor_price = processor_price,
         processor_cores=processor_cores,
         processor_threads=processor_threads,
         ram=ram,
         graphics_card=graphics_card,
+        graphics_card_price = graphics_card_price,
         graphics_card_mem=graphics_card_mem,
         os_name=os_name,
         os_version=os_version,
         hard_drive=', '.join(hard_drives),
-        price = price
+        price = price,
         sended = ""
     )
     comp_id = ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id
@@ -168,12 +198,15 @@ else:
             f"Имя компьютера: {node_name}\n"
             f"ОС: {os_name} {os_version}\n"
             f"Процессор: {processor_name}\n"
+            f"Стоимость процессора: {processor_price} USD\n"
             f"Количество ядер: {processor_cores}\n"
             f"Количество потоков: {processor_threads}\n"
             f"ОЗУ: {ram}\n"
             f"Видеокарта: {graphics_card}\n"
+            f"Стоимость видеокарты: {graphics_card_price} USD\n"
             f"Видеопамять: {graphics_card_mem}GB\n"
-            f"Жесткие диски: {', '.join(hard_drives)}\n")
+            f"Жесткие диски: {', '.join(hard_drives)}\n"
+            f"Стоимость общая: {price} USD\n")
 
     print("Сохранение информации в текстовый файл...")
     with open('computer_info.txt', 'a', encoding='utf-8') as file:
