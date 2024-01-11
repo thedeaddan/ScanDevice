@@ -1,5 +1,5 @@
-from peewee import SqliteDatabase, AutoField, CharField, Model
-from psutil import virtual_memory, cpu_count,disk_partitions,disk_usage
+from peewee import SqliteDatabase, AutoField, CharField, Model, IntegerField
+from psutil import virtual_memory, cpu_count,disk_partitions
 from telebot import telebot
 from platform import system,uname
 from time import sleep
@@ -12,6 +12,7 @@ except Exception as e:
 
 print("Инициализация базы данных SQLite...")
 db = SqliteDatabase('computer_info.db')
+hards = SqliteDatabase('database/accessories.db')
 
 class ComputerInfo(Model):
     computer_id = AutoField()
@@ -26,6 +27,7 @@ class ComputerInfo(Model):
     os_version = CharField()
     hard_drive = CharField()
     sended = CharField()
+    price = IntegerField()
 
     class Meta:
         database = db
@@ -145,6 +147,8 @@ existing_computer = find_similar_computer(
 if existing_computer:
     print("Аналогичный компьютер уже существует в базе данных. Не сохраняем новую запись.")
 else:
+    price = 0
+
     ComputerInfo.create(
         node_name=node_name,
         processor_name=processor_name,
@@ -156,6 +160,7 @@ else:
         os_name=os_name,
         os_version=os_version,
         hard_drive=', '.join(hard_drives),
+        price = price
         sended = ""
     )
     comp_id = ComputerInfo.select().order_by(ComputerInfo.computer_id.desc()).limit(1).get().computer_id
